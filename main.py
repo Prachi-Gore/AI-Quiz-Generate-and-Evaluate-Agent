@@ -14,19 +14,24 @@ graph = evaluate_quiz_graph()
 
 @app.post("/add_book_summary")
 async def add_book(book: BookSchema):
+#    print("add_book ",book)
    await add_book_to_vector_db(book.id, book.title, book.author)
     # return {"message": "Book added successfully"}
 
 @app.post("/generate_quiz")
 async def generate_quiz(req: QuizRequest):
      # Get book summary
-    book_id = req.get("book_id")
+    book_id = req.book_id
     if not book_id:
         raise ValueError("book_id is missing in state")
 
     summary = get_relevant_summary(book_id)
+    # print("get_relevant_summary ",summary)
+    # print("Required keys:", quiz_chain.prompt.input_variables)
     ai_generated_quiz = await quiz_chain.ainvoke({"context": summary})
-    quiz_array=json_parser.parse(ai_generated_quiz)
+    
+    quiz_array=json_parser.parse(ai_generated_quiz.get('text'))
+    # print("quiz_array ",quiz_array)
     return {"quiz": quiz_array}
 
 @app.post("/evaluate_answers")

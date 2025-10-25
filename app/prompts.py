@@ -6,7 +6,7 @@ from langchain.chains import LLMChain
 
 load_dotenv()
 llm = ChatOpenAI(
-    model="gpt-3.5-turbo",  # cheaper model suitable for free trial
+    model="gpt-4o-mini",  # cheaper model suitable for free trial
     temperature=0.6, # creativeness moderate
     api_key=os.getenv("OPENAI_API_KEY"),
 )
@@ -21,7 +21,7 @@ Book Summary:
 
 Return output strictly in JSON format like this:
 [
-  {"question": "...", "options": ["A", "B", "C", "D"], "correct": "A"},
+  {{"question": "...", "options": ["A", "B", "C", "D"], "correct": "A"}},
   ...
 ]
 """)

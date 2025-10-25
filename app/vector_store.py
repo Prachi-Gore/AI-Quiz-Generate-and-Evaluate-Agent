@@ -4,13 +4,21 @@ from dotenv import load_dotenv
 import os
 from app.prompts import summary_chain
 
-# Load environment variables from .env
-load_dotenv() 
+load_dotenv()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-print("OPENAI_KEY ",OPENAI_KEY)
+# print("OPENAI_KEY:", OPENAI_KEY)
+
 PERSIST_DIR = "vector_db/chroma_db"
 os.makedirs(PERSIST_DIR, exist_ok=True)
-embedding = OpenAIEmbeddings(model="text-embedding-3-small")
+
+# Initialize embedding function
+embedding = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_KEY)
+
+# Test embedding creation
+sample_vector = embedding.embed_query("This is a test text.")
+# print("Embedding created successfully. Length:", len(sample_vector))
+
+# Initialize Chroma vector store
 vectorstore = Chroma(
     collection_name="book_summaries",
     embedding_function=embedding,
@@ -18,17 +26,17 @@ vectorstore = Chroma(
 )
 
 async def add_book_to_vector_db(book_id: str, title: str, author: str):
-    summary = await summary_chain.ainvoke({
-        "title": title,
-        "author": author
-    })
-
-    """Store book summary embeddings in Chroma"""
+    """Generate and store a book summary with embeddings in Chroma"""
+    summary = await summary_chain.ainvoke({"title": title, "author": author})
+    summary_text = summary.get("text") 
+    # print('book summary_text',summary_text)
     vectorstore.add_texts(
-        texts=[summary],
-        metadatas=[{"book_id": book_id, "title": title, "author": author}]
+        texts=[summary_text],
+        metadatas=[{"book_id": book_id, "title": title, "author": author}],
+        ids=[book_id]   # assign a unique id
     )
     vectorstore.persist()
+    # print(f"Stored book '{title}' (ID: {book_id}) in Chroma DB")
 
 def get_relevant_summary(book_id: str):
     """Retrieve relevant summary for RAG"""
