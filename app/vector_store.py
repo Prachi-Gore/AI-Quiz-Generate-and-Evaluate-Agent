@@ -29,16 +29,17 @@ async def add_book_to_vector_db(book_id: str, title: str, author: str):
     """Generate and store a book summary with embeddings in Chroma"""
     summary = await summary_chain.ainvoke({"title": title, "author": author})
     summary_text = summary.get("text") 
-    # print('book summary_text',summary_text)
+    print('book summary_text',summary_text)
     vectorstore.add_texts(
         texts=[summary_text],
         metadatas=[{"book_id": book_id, "title": title, "author": author}],
         ids=[book_id]   # assign a unique id
     )
     vectorstore.persist()
-    # print(f"Stored book '{title}' (ID: {book_id}) in Chroma DB")
+    print(f"Stored book '{title}' (ID: {book_id}) in Chroma DB")
 
 def get_relevant_summary(book_id: str):
     """Retrieve relevant summary for RAG"""
-    docs = vectorstore.similarity_search(book_id, k=1)
+    docs = vectorstore.similarity_search(query="irrelevant", # mandatory to pass otherwise no use when we have filter
+                                          k=1,filter={"book_id": book_id})
     return docs[0].page_content if docs else ""

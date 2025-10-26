@@ -55,7 +55,7 @@ class FeedbackNode:
                 )
             })
         else:
-            feedback_text = "Great job! You’ve answered most questions correctly. ✅"
+            feedback_text = "Great job! You’ve answered most questions correctly."
 
         return {"feedback": feedback_text}
 

@@ -26,8 +26,8 @@ async def generate_quiz(req: QuizRequest):
         raise ValueError("book_id is missing in state")
 
     summary = get_relevant_summary(book_id)
-    # print("get_relevant_summary ",summary)
-    # print("Required keys:", quiz_chain.prompt.input_variables)
+    print("get_relevant_summary ",book_id,summary)
+    print("Required keys:", quiz_chain.prompt.input_variables)
     ai_generated_quiz = await quiz_chain.ainvoke({"context": summary})
     
     quiz_array=json_parser.parse(ai_generated_quiz.get('text'))
