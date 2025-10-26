@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Body
 from app.models import BookSchema, QuizRequest, EvaluateRequest
 from app.vector_store import add_book_to_vector_db,get_relevant_summary
 from app.quiz_graph import evaluate_quiz_graph
@@ -36,7 +36,17 @@ async def generate_quiz(req: QuizRequest):
 
 @app.post("/evaluate_answers")
 async def evaluate_answers(req: EvaluateRequest):
-    quiz_details=json.dumps(req.quiz) # convert list of dicts to JSON string
-    state = {"book_id": req.book_id, "quiz": quiz_details, "user_answers": req.user_answers, "evaluation": ""}
-    result =await graph.ainvoke(state)
-    return {"evaluation": result["evaluation"]}
+    print("Raw req:", req)
+    quiz_details = json.dumps(req.quiz_details)  
+    user_answers = json.dumps(req.user_answers)  
+    book_id = req.book_id
+    
+    state = {
+        "book_id": book_id,
+        "quiz": quiz_details,       # pass JSON string
+        "user_answers": user_answers
+    }
+    print('state quiz ',state)
+    result = await graph.ainvoke(state)
+
+    return result

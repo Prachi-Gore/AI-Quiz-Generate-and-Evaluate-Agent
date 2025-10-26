@@ -2,12 +2,14 @@ from langgraph.graph import StateGraph
 # from langgraph.graph.message import add_messages
 from app.prompts import  evaluation_chain,feedback_chain
 from typing import TypedDict, List,Optional
+from app.vector_store import get_relevant_summary
+import json
+
 
 class QuizState(TypedDict):
-    # book_id: str
-    quiz: str
-    user_answers: List[str]
-    evaluation: Optional[str]
+    book_id: str
+    quiz: str # qn+correct ans
+    user_answers: str
     score: Optional[float]
     feedback: Optional[str]
 
@@ -33,31 +35,35 @@ class EvaluationNode:
             "questions": state["quiz"],
             "user_answers": state["user_answers"]
         })
-
-        score = evaluation_result.get("score", 0)
-        evaluation_text = evaluation_result.get("feedback", "")
-        return {"evaluation": evaluation_text, "score": score}
+        response = json.loads(evaluation_result.get("text"))
+        print('evaluation_result ',evaluation_result,response)
+        # evaluation_text = evaluation_result.get("feedback", "")
+        return response
 
 
 class FeedbackNode:
     async def run(self, state: QuizState):
         score = state.get("score", 0)
         quiz = state.get("quiz", "")
+        user_answers= state.get("user_answers","")
+        relevant_summary = get_relevant_summary(state.get("book_id"))
 
-        if score < 3:
-            feedback_text = await feedback_chain.ainvoke({
+        if score <= 3:
+            feedback = await feedback_chain.ainvoke({
                 "quiz": quiz,
-                "evaluation": state["evaluation"],
                 "score":score,
+                "user_answers":user_answers,
+                "relevant_summary":relevant_summary,
                 "instruction": (
                     "Based on user's mistakes, suggest pages or sections "
                     "from the quiz or book they should reread."
                 )
             })
+            print("feedback_text ",feedback,json.loads(feedback.get("text")))
+            return json.loads(feedback.get("text"))
         else:
             feedback_text = "Great job! You’ve answered most questions correctly."
-
-        return {"feedback": feedback_text}
+        return  {'feedback':feedback_text}
 
 def evaluate_quiz_graph():
     # Create a workflow graph for the quiz

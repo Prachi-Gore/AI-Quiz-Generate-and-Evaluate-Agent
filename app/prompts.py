@@ -32,18 +32,19 @@ quiz_chain = LLMChain(llm=llm, prompt=quiz_prompt)
 
 # --- Answer Evaluator ---
 evaluation_prompt = ChatPromptTemplate.from_template("""
-You are an evaluator.
-Evaluate user's answers based on these quiz questions and correct answers.
+You are a strict quiz evaluator.
+Compare the user's answers with the correct answers and count how many are correct.
 
-Questions:
+Correct Answers:
 {questions}
 
 User Answers:
 {user_answers}
 
-Give score out of 5 and a feedback summary (pros & cons).
-Return response as:
-{{"score": int, "feedback": "string"}}
+Return only JSON:
+{{
+  "score": int
+}}
 """)
 
 evaluation_chain = LLMChain(llm=llm, prompt=evaluation_prompt)
@@ -55,19 +56,26 @@ summary_chain = LLMChain(llm=llm, prompt=summary_prompt)
 
 # Prompt template for feedback
 feedback_prompt = ChatPromptTemplate.from_template("""
-You are an educational assistant. A user has answered a quiz with the following results:
+You are an intelligent book mentor.
+Here’s a summary of the book and the user’s quiz performance.
 
-Quiz Questions:
+Book Context:
+{relevant_summary}
+
+User’s Score: {score}
+Correct Answers:
 {quiz}
+User Answers:
+{user_answers}
 
-Evaluation / Mistakes:
-{evaluation}
+Based on the mistakes, provide **short, concise, and actionable feedback**.
+Mention only the chapters, sections, or concepts the user should re-read. 
+Be kind and precise. Limit the response to **1-3 sentences**.
 
-The user scored {score} out of 5.
-
-Instruction:
-If the score is below 3, suggest specific pages or sections of the book they should reread to improve their understanding.
-Provide concise, clear, and helpful advice. If the score is high, give a positive encouragement message.
+Return JSON:
+{{
+  "feedback": str
+}}
 """)
 
 feedback_chain = LLMChain(llm=llm, prompt=feedback_prompt)

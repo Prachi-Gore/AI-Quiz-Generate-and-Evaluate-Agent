@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List,Dict,Any
 
 class BookSchema(BaseModel):
     id: str
@@ -12,4 +12,4 @@ class QuizRequest(BaseModel):
 class EvaluateRequest(BaseModel):
     book_id: str
     user_answers: List[str]
-    questions:List[str]
+    quiz_details: List[Dict[str, Any]] 
